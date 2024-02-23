@@ -10,6 +10,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
+from google.oauth2 import service_account
 
 
 # If modifying these scopes, delete the file token.json.
@@ -617,7 +618,7 @@ def config():
     # check_credentials(cred)
     # print(creds.expired)
     # # check_watch_renewal()
-    with open('newfile.json', "w") as file:
+    with open('/tmp/my_temp_file.txt', "w") as file:
         file.write(json.dumps({"A new file":"here"}))
         print("new file created!")
 
@@ -641,18 +642,18 @@ def handle_notify(data):
     """
     email_id = get_id(data)
     print("id", email_id)
-    alert = get_credit_alert(email_id)
+    # alert = get_credit_alert(email_id)
     
-    if alert:
-        payments_expected = get_pending_payments()
-        reference = alert["details"].split("to")[1].lower()
-        for user in payments_expected:
-            if user["name"].lower() in reference or user["student id"] in reference:
-                result = verify_payment(user["student id"], alert["account"], alert["amount"])
-                if result:
-                    return f"Payment for {user['student id']} verified!"
+    # if alert:
+    #     payments_expected = get_pending_payments()
+    #     reference = alert["details"].split("to")[1].lower()
+    #     for user in payments_expected:
+    #         if user["name"].lower() in reference or user["student id"] in reference:
+    #             result = verify_payment(user["student id"], alert["account"], alert["amount"])
+    #             if result:
+    #                 return f"Payment for {user['student id']} verified!"
     
-    check_watch_renewal()
+    # check_watch_renewal()
     print("No payment verified!")
     return False
 
