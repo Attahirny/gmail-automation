@@ -103,11 +103,9 @@ def create_credentials():
         }
     }
 
-    # Write the credentials dictionary to a JSON file
-    with open("credentials.json", "w") as file:
-        json.dump(credentials, file)
+    return credentials
 
-def check_credentials():
+def check_credentials(cred):
     global creds
     if os.path.exists(TOKEN):
         creds = Credentials.from_authorized_user_file(TOKEN)  # Path to your credentials file    
@@ -116,7 +114,7 @@ def check_credentials():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            flow = InstalledAppFlow.from_client_config(cred, SCOPES)
             creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
         with open(TOKEN, "w") as token:
@@ -627,15 +625,15 @@ def check_watch_renewal() -> None:
 def config():
     global TOPIC_NAME, SPREADSHEET_ID 
 
-    create_credentials()
-    check_credentials()
+    cred = create_credentials()
+    check_credentials(cred)
     check_watch_renewal()
 
     try:
         if SPREADSHEET_ID is None or TOPIC_NAME is None:
             SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
             TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
-            
+
     except ValueError as e:
         print(e)
 
