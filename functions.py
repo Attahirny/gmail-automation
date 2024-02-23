@@ -7,10 +7,9 @@ from typing import Dict, Optional
 from datetime import datetime, timedelta
 
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
 
 
 # If modifying these scopes, delete the file token.json.
@@ -82,43 +81,32 @@ def create_credentials():
         ValueError: If any of the required inputs are missing.
     """
     # Retrieve the client ID, client secret, and project ID from the environment variables
-    client_id = os.environ.get('GOOGLE_CLIENT_ID')
-    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
-    project_id = os.environ.get('GOOGLE_PROJECT_ID')
+    project_id = "new_mail"#os.environ.get('GOOGLE_PROJECT_ID')
+    client_email = "gmail-automation@celtic-house-384205.iam.gserviceaccount.com"#os.environ.get('GOOGLE_CLIENT_EMAIL')
+    private_key_id = "ae4a099f784f7f9ae0ca89e1f65355f6ea9507ac"#os.environ.get('GOOGLE_PRIVATE_KEY_ID')
+    private_key = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCURsjasEmhUD0J\nUFMZ8Bu+vRGp+zq8009SyBFkfl93ZmpfUONSfilAmjZge+pxXxXtI17YomHb9L1m\najMJimbiu2ixnkCuJlszB3QhS8tT0EBHL5gX8AefGt0hIyQ8JNPL/nFAoaPC00bg\n2QQ/eyowjmtQPbloE1ejVGUJT8CwATW8nO0NPYGqLsyI4d4yNy+gj2poAnOCTfj5\nLJPkxomPiKyDQRXYPn76BRN4Xhmw5tlcL9aUlzrnT9qaVNt86IMM456v93DdjJ8X\nFAJsckUtCZ/WU5xrposunVwKUlEHQgnh222t6rtEqplD0fUwa/VyYpRd+DiP80lS\nS/mlctFtAgMBAAECggEAEcnuNeJZawt7zx6+YYm/YmI/eMOlt9qoFRfgkkxg+quk\nTlwfcZmmLFRz+p5TMZfFQyZvrhDJKcDSajOKfPYIQuJV/J0uSFZcsaIOyiHUOnFt\nDL1Gg3SuDWYFKoETS03lxP75KlZaFbkQM1CF5HHLzXiAomdNU5GifXtWBch2JwdH\nSYB9zImcAThS/nHxEfac0AuUcVTOeBJSaPf+xfwP6ydZW1X6ndGUbq696CO62NW1\nPglHdqhcxTDzZlpphRrkwfD0Hh0dpzz4IPpIAmZ4p7DoxzJ+57W45IcuDeocR5kD\nPwmHoY/t7q6Wn+4AgNpWTkxCWMRJGlk4bUUOW1ZUhwKBgQDPtlInPjb7MbviR55z\nGXAeB3cnUZ00K9qzlHXGw2r9WJV2uNDYYSqxC7abesUpNBaDBTyfDu9VcPyfUFaI\nm9Hi1Kabr6w3ghKqdZqmW0Fx4OhoB6B/n3q2xUz+rCej7Wkol1nc5WjFoPDGOFJv\n0pvxIvMygUIlGtPt0JphFIeftwKBgQC2vzzopYPUX/xkHefcNkVLHAU/ZRV/xvNY\nTRQwz+5tY9MjeE/o8mxPP8gCx6RFRUxBtIaU6+HnVSfsoaI/0KYKBwzWfW3b2dHr\nc19gosgcofRu6T48hSu6jQeK3ei0PbO8Dre5FsuX4WjOWxHYl/P1HejoBfGVPFxM\n0pKHq86P+wKBgCrWYyMMxbIQk7sbIiaCvIi06XIGdvFnifc3SwLvEoWlW03c19WI\nVJGm5MY0D61rvKjQz6vOHLX2U2NX4kDSQfsR+DprhIz+GnNlRbvBXkHqLIQn7oXj\nkh9XmYV8Y8B/GgzxCetwtKbthjqbKwU83kRg/N8RoV6dpc+KEgyrez0JAoGBAImQ\n0BL5dZGLZ/0dngphOCxgPXsJZvO3GjwgWdCc1gi2mpwa11yuEOZfRvsAuiIDFnJn\nqN+16Wow6krxKagMMtFdmUZlSSu0fpdVVDj0kNss90n+foEkZlSaEVFx1tjHkeNA\n2QCVrlD4t+KPH5ICYPzltQvkXYVP2NNjuDY1GNu9AoGAc19O2X5p2qvkCE9rH2ly\nY7g18FThXt9+HbnhfQWWQJ+RrOTUKc201yf3AF7bRtonXpnVDdmpz3QBYIC/bnGs\nhpjU/7pZ5VRr5zkb9EjqCpAqS+6maKZ/XZ/CtIk0CnraTLCbAVK+CAAKor4t9XML\nCPVh3a7U5yKSCa9u4r1cC0g=\n-----END PRIVATE KEY-----\n".replace('\\n', '\n') #os.environ.get('GOOGLE_PRIVATE_KEY').replace('\\n', '\n')  # Replace '\\n' with '\n'
 
     # Check if any of the required inputs are missing
-    if client_id is None or client_secret is None or project_id is None:
+    if client_email is None or private_key_id is None or project_id is None or private_key is None:
         raise ValueError("Missing required environment variables")
 
     # Create the credentials dictionary
     credentials = {
-        "installed": {
-            "client_id": client_id,
-            "project_id": project_id,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": client_secret,
-            "redirect_uris": ["http://localhost"]
-        }
+        "client_email": client_email,
+        "private_key_id": private_key_id,
+        "private_key": private_key,
+        "token_uri": "https://oauth2.googleapis.com/token"
     }
 
     return credentials
 
 def check_credentials(cred):
     global creds
-    if os.path.exists(TOKEN):
-        creds = Credentials.from_authorized_user_file(TOKEN)  # Path to your credentials file    
-    # If there are no (valid) credentials available, let the user log in.
+    creds = service_account.Credentials.from_service_account_info(cred, scopes=SCOPES)
+    
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+        if creds and creds.expired:
             creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_config(cred, SCOPES)
-            creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-        with open(TOKEN, "w") as token:
-            token.write(creds.to_json())
 
 def naira_to_float(amount: str) -> float:
     """
@@ -623,19 +611,23 @@ def check_watch_renewal() -> None:
         LAST_HISTORY_ID = response["historyId"]
 
 def config():
-    global TOPIC_NAME, SPREADSHEET_ID 
+    global TOPIC_NAME, SPREADSHEET_ID, creds
 
-    cred = create_credentials()
-    check_credentials(cred)
-    check_watch_renewal()
+    # cred = create_credentials()
+    # check_credentials(cred)
+    # print(creds.expired)
+    # # check_watch_renewal()
+    with open('newfile.json', "w") as file:
+        file.write(json.dumps({"A new file":"here"}))
+        print("new file created!")
 
-    try:
-        if SPREADSHEET_ID is None or TOPIC_NAME is None:
-            SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
-            TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
+    # try:
+    #     if SPREADSHEET_ID is None or TOPIC_NAME is None:
+    #         SPREADSHEET_ID = "1ogh7BGYSeh8VUi3WmqNJolAtVep4C2OnuR2YhGTCwiM" #os.environ.get('GOOGLE_SPREADSHEET_ID')
+    #         TOPIC_NAME = "projects/celtic-house-384205/topics/new_mail" #"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
 
-    except ValueError as e:
-        print(e)
+    # except ValueError as e:
+    #     print(e)
 
 def handle_notify(data):
     """
@@ -649,18 +641,18 @@ def handle_notify(data):
     """
     email_id = get_id(data)
     print("id", email_id)
-    alert = get_credit_alert(email_id)
+    # alert = get_credit_alert(email_id)
     
-    if alert:
-        payments_expected = get_pending_payments()
-        reference = alert["details"].split("to")[1].lower()
-        for user in payments_expected:
-            if user["name"].lower() in reference or user["student id"] in reference:
-                result = verify_payment(user["student id"], alert["account"], alert["amount"])
-                if result:
-                    return f"Payment for {user['student id']} verified!"
+    # if alert:
+    #     payments_expected = get_pending_payments()
+    #     reference = alert["details"].split("to")[1].lower()
+    #     for user in payments_expected:
+    #         if user["name"].lower() in reference or user["student id"] in reference:
+    #             result = verify_payment(user["student id"], alert["account"], alert["amount"])
+    #             if result:
+    #                 return f"Payment for {user['student id']} verified!"
     
-    check_watch_renewal()
+    # check_watch_renewal()
     print("No payment verified!")
     return False
 
