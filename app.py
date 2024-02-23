@@ -1,5 +1,5 @@
 import functions
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 
 
 app = Flask(__name__)
@@ -27,6 +27,14 @@ def handle_update():
     data = request.json
     functions.update_data(data)
     return 'OK', 200
+
+@app.route('/')
+def index():
+    return 'Google gmail automation is working!'
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory("./static", 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     app.run(debug=True)
