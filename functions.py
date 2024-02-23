@@ -7,10 +7,9 @@ from typing import Dict, Optional
 from datetime import datetime, timedelta
 
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
 
 
 # If modifying these scopes, delete the file token.json.
@@ -82,43 +81,32 @@ def create_credentials():
         ValueError: If any of the required inputs are missing.
     """
     # Retrieve the client ID, client secret, and project ID from the environment variables
-    client_id = os.environ.get('GOOGLE_CLIENT_ID')
-    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
     project_id = os.environ.get('GOOGLE_PROJECT_ID')
+    client_email = os.environ.get('GOOGLE_CLIENT_EMAIL')
+    private_key_id = os.environ.get('GOOGLE_PRIVATE_KEY_ID')
+    private_key = os.environ.get('GOOGLE_PRIVATE_KEY').replace('\\n', '\n')  # Replace '\\n' with '\n'
 
     # Check if any of the required inputs are missing
-    if client_id is None or client_secret is None or project_id is None:
+    if client_email is None or private_key_id is None or project_id is None or private_key is None:
         raise ValueError("Missing required environment variables")
 
     # Create the credentials dictionary
     credentials = {
-        "installed": {
-            "client_id": client_id,
-            "project_id": project_id,
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": client_secret,
-            "redirect_uris": ["http://localhost"]
-        }
+        "client_email": client_email,
+        "private_key_id": private_key_id,
+        "private_key": private_key,
+        "token_uri": "https://oauth2.googleapis.com/token"
     }
 
     return credentials
 
 def check_credentials(cred):
     global creds
-    if os.path.exists(TOKEN):
-        creds = Credentials.from_authorized_user_file(TOKEN)  # Path to your credentials file    
-    # If there are no (valid) credentials available, let the user log in.
+    creds = service_account.Credentials.from_service_account_info(cred, scopes=SCOPES)
+    
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+        if creds and creds.expired:
             creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_config(cred, SCOPES)
-            creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-        with open(TOKEN, "w") as token:
-            token.write(creds.to_json())
 
 def naira_to_float(amount: str) -> float:
     """
@@ -623,19 +611,23 @@ def check_watch_renewal() -> None:
         LAST_HISTORY_ID = response["historyId"]
 
 def config():
-    global TOPIC_NAME, SPREADSHEET_ID 
+    global TOPIC_NAME, SPREADSHEET_ID, creds
 
-    cred = create_credentials()
-    check_credentials(cred)
-    check_watch_renewal()
+    # cred = create_credentials()
+    # check_credentials(cred)
+    # print(creds.expired)
+    # # check_watch_renewal()
+    with open('newfile.json', "w") as file:
+        file.write(json.dumps({"A new file":"here"}))
+        print("new file created!")
 
-    try:
-        if SPREADSHEET_ID is None or TOPIC_NAME is None:
-            SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
-            TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
+    # try:
+    #     if SPREADSHEET_ID is None or TOPIC_NAME is None:
+    #         SPREADSHEET_ID = "1ogh7BGYSeh8VUi3WmqNJolAtVep4C2OnuR2YhGTCwiM" #os.environ.get('GOOGLE_SPREADSHEET_ID')
+    #         TOPIC_NAME = "projects/celtic-house-384205/topics/new_mail" #"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
 
-    except ValueError as e:
-        print(e)
+    # except ValueError as e:
+    #     print(e)
 
 def handle_notify(data):
     """
