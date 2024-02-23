@@ -28,7 +28,23 @@ STATUS_COLUMN = 9
 TOPIC_NAME = None
 
 
-def update_data(data):
+def update_data(data: dict) -> None:
+    """
+    Updates global variables based on the input data dictionary.
+
+    Args:
+        data (dict): A dictionary containing the following optional keys:
+            - spreadsheet_id (str): The ID of the spreadsheet to update.
+            - table_range (str): The range of cells in the spreadsheet to update.
+            - names_column (int): The column index of the names column in the spreadsheet.
+            - student_id_column (int): The column index of the student ID column in the spreadsheet.
+            - transaction_amount (int): The transaction amount to update in the spreadsheet.
+            - status_column (int): The column index of the status column in the spreadsheet.
+            - topic_name (str): The name of the topic.
+
+    Returns:
+        None
+    """
     global SPREADSHEET_ID, TABLE_RANGE, NAMES_COLUMN, STUDENT_ID_COLUMN, TRANSACTION_AMOUNT, STATUS_COLUMN, TOPIC_NAME
 
     if 'spreadsheet_id' in data:
@@ -53,19 +69,41 @@ def update_data(data):
         TOPIC_NAME = data["topic_name"]
 
 def create_credentials():
+    """
+    Creates the credentials file required for authentication with the Google API.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If any of the required inputs are missing.
+    """
+    # Retrieve the client ID, client secret, and project ID from the environment variables
     client_id = environ.get('GOOGLE_CLIENT_ID')
     client_secret = environ.get('GOOGLE_CLIENT_SECRET')
     project_id = environ.get('GOOGLE_PROJECT_ID')
+
+    # Check if any of the required inputs are missing
+    if client_id is None or client_secret is None or project_id is None:
+        raise ValueError("Missing required environment variables")
+
+    # Create the credentials dictionary
     credentials = {
-        "installed":{
-            "client_id":client_id,
-            "project_id":project_id,
-            "auth_uri":"https://accounts.google.com/o/oauth2/auth",
-            "token_uri":"https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":client_secret,
-            "redirect_uris":["http://localhost"]
+        "installed": {
+            "client_id": client_id,
+            "project_id": project_id,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_secret": client_secret,
+            "redirect_uris": ["http://localhost"]
         }
     }
+
+    # Write the credentials dictionary to a JSON file
     with open("credentials.json", "w") as file:
         json.dump(credentials, file)
 
