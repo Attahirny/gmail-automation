@@ -1,7 +1,7 @@
 import re
 import json
 import base64
-import os.path
+from os import path, environ
 from bs4 import BeautifulSoup
 from typing import Dict, Optional
 from datetime import datetime, timedelta
@@ -52,9 +52,26 @@ def update_data(data):
     if 'topic_name' in data: 
         TOPIC_NAME = data["topic_name"]
 
+def create_credentials():
+    client_id = environ.get('GOOGLE_CLIENT_ID')
+    client_secret = environ.get('GOOGLE_CLIENT_SECRET')
+    project_id = environ.get('GOOGLE_PROJECT_ID')
+    credentials = {
+        "installed":{
+            "client_id":client_id,
+            "project_id":project_id,
+            "auth_uri":"https://accounts.google.com/o/oauth2/auth",
+            "token_uri":"https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":client_secret,
+            "redirect_uris":["http://localhost"]
+        }
+    }
+    with open("credentials.json", "w") as file:
+        json.dump(credentials, file)
+
 def check_credentials():
     global creds
-    if os.path.exists(TOKEN):
+    if path.exists(TOKEN):
         creds = Credentials.from_authorized_user_file(TOKEN)  # Path to your credentials file    
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -572,14 +589,15 @@ def check_watch_renewal() -> None:
 def config():
     global TOPIC_NAME, SPREADSHEET_ID 
 
+    create_credentials()
     check_credentials()
+    check_watch_renewal()
 
     try:
         if SPREADSHEET_ID is None or TOPIC_NAME is None:
-            SPREADSHEET_ID = str(input("Enter the spreadsheet id: "))
-            TOPIC_NAME = str(input("Enter the Pub/Sub topic name id: "))
+            SPREADSHEET_ID = environ.get('GOOGLE_SPREADSHEET_ID')
+            TOPIC_NAME = environ.get('GOOGLE_TOPIC_NAME')
     except ValueError as e:
-        print(e)
         print(e)
 
 def handle_notify(data):

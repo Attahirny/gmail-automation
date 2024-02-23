@@ -18,7 +18,6 @@ def handle_webhook():
 @app.route('/stopWatch')
 def handle_stop_request():
     # Handle webhook notifications from Google Pub/Sub
-    data = request.json
     functions.stop_watch()
     return 'Watch on gmail inbox stopped.', 200
     
@@ -30,4 +29,4 @@ def handle_update():
     return 'OK', 200
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
