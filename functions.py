@@ -1,7 +1,7 @@
 import re
 import json
 import base64
-from os import path, environ
+import os
 from bs4 import BeautifulSoup
 from typing import Dict, Optional
 from datetime import datetime, timedelta
@@ -82,9 +82,9 @@ def create_credentials():
         ValueError: If any of the required inputs are missing.
     """
     # Retrieve the client ID, client secret, and project ID from the environment variables
-    client_id = environ.get('GOOGLE_CLIENT_ID')
-    client_secret = environ.get('GOOGLE_CLIENT_SECRET')
-    project_id = environ.get('GOOGLE_PROJECT_ID')
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+    project_id = os.environ.get('GOOGLE_PROJECT_ID')
 
     # Check if any of the required inputs are missing
     if client_id is None or client_secret is None or project_id is None:
@@ -109,7 +109,7 @@ def create_credentials():
 
 def check_credentials():
     global creds
-    if path.exists(TOKEN):
+    if os.path.exists(TOKEN):
         creds = Credentials.from_authorized_user_file(TOKEN)  # Path to your credentials file    
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -633,8 +633,9 @@ def config():
 
     try:
         if SPREADSHEET_ID is None or TOPIC_NAME is None:
-            SPREADSHEET_ID = environ.get('GOOGLE_SPREADSHEET_ID')
-            TOPIC_NAME = f'projects/{environ.get('GOOGLE_PROJECT_ID')}/topics/{environ.get('GOOGLE_TOPIC_NAME')}'
+            SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
+            TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
+            
     except ValueError as e:
         print(e)
 
