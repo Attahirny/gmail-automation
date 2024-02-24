@@ -101,6 +101,7 @@ def create_credentials():
             'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs'
         }
     }
+    print(create_credentials)
     return credentials
 
 def check_credentials(cred, token=None):
@@ -116,16 +117,20 @@ def check_credentials(cred, token=None):
         elif cred:
             # Create OAuth 2.0 flow
             flow = Flow.from_client_config(cred, scopes=SCOPES)
-            flow.redirect_uri = os.environ.get('REDIRECT_URL')
+            redirect_uri = os.environ.get('REDIRECT_URL')
+            flow.redirect_uri = redirect_uri
+            print(redirect_uri)
 
             # Generate authorization URL
             authorization_url, state = flow.authorization_url(
                 access_type='offline',
                 prompt='consent'
             )
+            print(state)
             return authorization_url, state
 
 def finalize_auth(cred, code):
+    print("code: ", code)
     flow = Flow.from_client_config(cred, scopes=SCOPES)
     flow.redirect_uri = os.environ.get('REDIRECT_URL')
     flow.fetch_token(code=code)
