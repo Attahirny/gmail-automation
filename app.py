@@ -44,7 +44,8 @@ def oauth2callback():
 
     # Exchange authorization code for tokens
     cred = functions.create_credentials()
-    session['credentials'] = functions.finalize_auth(cred, code)
+    if code:
+        session['credentials'] = functions.finalize_auth(cred, code)
 
     return redirect(url_for('index'))
 
