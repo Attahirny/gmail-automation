@@ -11,8 +11,8 @@ def index():
     # Load stored credentials from session
     if session.get('credentials'):
         functions.check_credentials(None, session['credentials'])
-    else:
-        return redirect('authorize')
+    # else:
+    #     return redirect('authorize')
 
     return render_template("index.html")
 
@@ -22,12 +22,13 @@ def favicon():
 
 @app.route('/authorize')
 def authorize():
-
-    cred = functions.create_credentials()
-    authorization_url, session['state'] = functions.check_credentials(cred)
-
-    # Redirect user to Google's authorization page
-    return redirect(authorization_url)
+    if not session.get('credentials'):
+        cred = functions.create_credentials()
+        authorization_url, session['state'] = functions.check_credentials(cred)
+        # Redirect user to Google's authorization page
+        return redirect(authorization_url)
+    else:
+        redirect("/")
 
 @app.route('/oauth2callback')
 def oauth2callback():

@@ -13,6 +13,52 @@
             color: #fff;
         }
 
+        header {
+            background-color: #333;            
+            position: fixed;
+            top: 0;
+            width: -webkit-fill-available;
+            color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-menu {
+            display: flex;
+            gap: 20px;
+        }
+
+        .panel-menu span {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .panel-menu span:hover {
+            background-color: #555;
+        }
+
+        .panel-login button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .panel-login button:hover {
+            background-color: #0056b3;
+        }
+
         .container {
             display: flex;
             justify-content: center;
@@ -140,6 +186,18 @@
     </style>
 </head>
 <body>
+    <header>
+        <div class="panel">
+            <div class="panel-menu">
+                <span class="home">Home</span>
+                <span class="home">Dashboard</span>
+                <span class="home">Users</span>
+            </div>
+            <div class="panel-login">
+                <button class="login-button" onclick="redirectToAuthorize()">Login</button>
+            </div>
+        </div>
+    </header>
     <div class="container">
         <div class="app-box">
             <div class="header">
@@ -157,6 +215,9 @@
     </div>
 
     <script>
+        function redirectToAuthorize() {
+            window.location.href = "/authorize";
+        }
         function toggleApp() {
             var status = document.querySelector('.status span');
             var toggleButton = document.querySelector('.toggle-button');
