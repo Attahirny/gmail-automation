@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Payment Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .app-box {
+            width: 90%;
+            height: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-width: 600px;
+            padding: 40px;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: black;
+            margin: 0;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status {
+            display: flex;
+            justify-content: center;
+            font-size: 24px;
+            color: black;
+            margin-bottom: 20px;
+        }
+
+        .status .active {
+            color: green;
+            padding-left: 10px;
+            padding-right: 14px;
+            font-size: 20px;
+        }
+
+        .status .stopped {
+            color: red;
+            padding-left: 10px;
+            font-size: 20px;
+        }
+
+        .toggle-button {
+            background-color: #fff;
+            color: #007bff;
+            border: solid #007bff 2px;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 2px #469af3;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .toggle-button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .toggle-button.start {
+            color: green; 
+            box-shadow: 0 0 2px green;
+            border: solid green 2px;
+        }
+
+        .toggle-button.start:hover {
+            background-color: green;
+            color: white;
+        }
+
+        .toggle-button.stop {
+            color: red;
+            box-shadow: 0 0 2px red;
+            border: solid red 2px;
+        }
+
+        .toggle-button.stop:hover {
+            background-color: red;
+            color: white;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        footer a {
+            color: #ffffff;
+        }
+
+        footer a:hover {
+            color: #001c3a;
+            text-decoration: underline;
+        }
+
+        @media screen and (max-width: 768px) {
+            .app-box {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-box">
+            <div class="header">
+                <div></div>
+                <h1>Automatic Payment Detector</h1>
+                <img src="/static/favicon.ico" alt="Profile Picture" class="profile-pic"> 
+            </div>
+            <div class="status">
+                Status: <span class="stopped">Inactive</span>
+            </div>
+            <div>
+                <button class="toggle-button start" onclick="toggleApp()">Start App</button>
+            </div>             
+        </div>
+    </div>
+
+    <script>
+        function toggleApp() {
+            var status = document.querySelector('.status span');
+            var toggleButton = document.querySelector('.toggle-button');
+            
+            if (status.textContent === 'Inactive') {
+                status.textContent = 'Active';
+                status.classList.remove('stopped');
+                status.classList.add('active');
+                toggleButton.textContent = 'Stop App';
+                toggleButton.classList.remove('start');
+                toggleButton.classList.add('stop');
+            } else if (status.textContent === 'Active'){
+                status.textContent = 'Inactive';
+                status.classList.remove('active');
+                status.classList.add('stopped');
+                toggleButton.textContent = 'Start App';
+                toggleButton.classList.remove('stop');
+                toggleButton.classList.add('start');
+            }
+        }
+    </script>
+    <footer>
+        <div style="text-align: center; padding-top: 20px;">
+            <p>&copy; 2024 Automatic Payment Detector | Developed by <a href="https://github.com/Attahirny" target="_blank">Attahirny</a></p>
+        </div>
+    </footer>
+</body>
+</html>

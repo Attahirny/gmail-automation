@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 credentials.json
+argon-dashboard-flask-master/
 newfile.json
 # C extensions
 *.so

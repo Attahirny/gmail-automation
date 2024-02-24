@@ -7,15 +7,14 @@ from typing import Dict, Optional
 from datetime import datetime, timedelta
 
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.oauth2 import service_account
-from google.oauth2 import service_account
 
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.modify", "https://www.googleapis.com/auth/spreadsheets"]
-TOKEN = 'token.json'
 LAST_HISTORY_ID = 0
 NEXT_WATCH = None
 creds = None
@@ -83,31 +82,57 @@ def create_credentials():
     """
     # Retrieve the client ID, client secret, and project ID from the environment variables
     project_id = os.environ.get('GOOGLE_PROJECT_ID')
-    client_email = os.environ.get('GOOGLE_CLIENT_EMAIL')
-    private_key_id = os.environ.get('GOOGLE_PRIVATE_KEY_ID')
-    private_key = os.environ.get('GOOGLE_PRIVATE_KEY').replace('\\n', '\n')  # Replace '\\n' with '\n'
+    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
 
     # Check if any of the required inputs are missing
-    if client_email is None or private_key_id is None or project_id is None or private_key is None:
+    if client_id is None or client_secret is None or project_id is None:
         raise ValueError("Missing required environment variables")
 
-    # Create the credentials dictionary
+    # Define OAuth 2.0 credentials
     credentials = {
-        "client_email": client_email,
-        "private_key_id": private_key_id,
-        "private_key": private_key,
-        "token_uri": "https://oauth2.googleapis.com/token"
+        'web': {
+            'client_id': client_id,
+            'client_secret': client_secret,
+            "project_id": project_id,
+            'redirect_uris': [os.environ.get('REDIRECT_URL')],
+            'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+            'token_uri': 'https://oauth2.googleapis.com/token',
+            'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs'
+        }
     }
-
     return credentials
 
-def check_credentials(cred):
+def check_credentials(cred, token=None):
     global creds
-    creds = service_account.Credentials.from_service_account_info(cred, scopes=SCOPES)
-    
+
+    if token:
+        token = json.loads(token)
+        creds = Credentials.from_authorized_user_info(token)  # Path to your credentials file    
+    # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
-        if creds and creds.expired:
+        if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+        elif cred:
+            # Create OAuth 2.0 flow
+            flow = Flow.from_client_config(cred, scopes=SCOPES)
+            flow.redirect_uri = os.environ.get('REDIRECT_URL')
+
+            # Generate authorization URL
+            authorization_url, state = flow.authorization_url(
+                access_type='offline',
+                prompt='consent'
+            )
+            return authorization_url, state
+
+def finalize_auth(cred, code):
+    flow = Flow.from_client_config(cred, scopes=SCOPES)
+    flow.redirect_uri = os.environ.get('REDIRECT_URL')
+    flow.fetch_token(code=code)
+
+    # Store credentials in the session
+    creds = flow.credentials.to_json()
+    return creds
 
 def naira_to_float(amount: str) -> float:
     """
@@ -551,6 +576,7 @@ def get_id(response):
         ).execute()
 
         messages = response.get("history", [])
+        print(json.dumps(messages))
         last_message = None
 
         for message in messages:
@@ -614,21 +640,13 @@ def check_watch_renewal() -> None:
 def config():
     global TOPIC_NAME, SPREADSHEET_ID, creds
 
-    # cred = create_credentials()
-    # check_credentials(cred)
-    # print(creds.expired)
-    # # check_watch_renewal()
-    with open('/tmp/my_temp_file.txt', "w") as file:
-        file.write(json.dumps({"A new file":"here"}))
-        print("new file created!")
+    # check_watch_renewal()
 
-    # try:
-    #     if SPREADSHEET_ID is None or TOPIC_NAME is None:
-    #         SPREADSHEET_ID = "1ogh7BGYSeh8VUi3WmqNJolAtVep4C2OnuR2YhGTCwiM" #os.environ.get('GOOGLE_SPREADSHEET_ID')
-    #         TOPIC_NAME = "projects/celtic-house-384205/topics/new_mail" #"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
+    if SPREADSHEET_ID is None or TOPIC_NAME is None:
+        SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
+        TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
 
-    # except ValueError as e:
-    #     print(e)
+    return os.urandom(24)
 
 def handle_notify(data):
     """
@@ -642,16 +660,16 @@ def handle_notify(data):
     """
     email_id = get_id(data)
     print("id", email_id)
-    # alert = get_credit_alert(email_id)
+    alert = get_credit_alert(email_id)
     
-    # if alert:
-    #     payments_expected = get_pending_payments()
-    #     reference = alert["details"].split("to")[1].lower()
-    #     for user in payments_expected:
-    #         if user["name"].lower() in reference or user["student id"] in reference:
-    #             result = verify_payment(user["student id"], alert["account"], alert["amount"])
-    #             if result:
-    #                 return f"Payment for {user['student id']} verified!"
+    if alert:
+        payments_expected = get_pending_payments()
+        reference = alert["details"].split("to")[1].lower()
+        for user in payments_expected:
+            if user["name"].lower() in reference or user["student id"] in reference:
+                result = verify_payment(user["student id"], alert["account"], alert["amount"])
+                if result:
+                    return f"Payment for {user['student id']} verified!"
     
     # check_watch_renewal()
     print("No payment verified!")
