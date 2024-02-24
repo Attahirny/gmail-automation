@@ -28,7 +28,7 @@ def authorize():
         # Redirect user to Google's authorization page
         return redirect(authorization_url)
     else:
-        redirect("/")
+        return redirect(url_for('index'))
 
 @app.route('/oauth2callback')
 def oauth2callback():
