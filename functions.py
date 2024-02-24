@@ -664,7 +664,6 @@ def handle_notify(data):
         Union[str, bool]: A success message if payment is verified, or a failure message if no payment is verified.
     """
     email_id = get_id(data)
-    print("id", email_id)
     alert = get_credit_alert(email_id)
     
     if alert:
