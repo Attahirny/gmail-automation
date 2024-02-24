@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             background-color: #007bff;
-            color: #fff;
         }
 
         header {
@@ -190,11 +189,14 @@
         <div class="panel">
             <div class="panel-menu">
                 <span class="home">Home</span>
-                <span class="home">Dashboard</span>
-                <span class="home">Users</span>
+                <span class="dashboard">Dashboard</span>
+                <span class="users">Users</span>
+                <span class="revoke" onclick="redirectTo('/revoke')">Revoke</span>
+                <span class="clear" onclick="redirectTo('/clear')">Clear</span>
+                <span class="stopWatch" onclick="redirectTo('/stopWatch')">Stop Watch</span>
             </div>
             <div class="panel-login">
-                <button class="login-button" onclick="redirectToAuthorize()">Login</button>
+                <button class="login-button" onclick="redirectTo('/authorize')">Login</button>
             </div>
         </div>
     </header>
@@ -208,6 +210,7 @@
             <div class="status">
                 Status: <span class="stopped">Inactive</span>
             </div>
+            <span class="message" style="color: red;">{{message}}</span>
             <div>
                 <button class="toggle-button start" onclick="toggleApp()">Start App</button>
             </div>             
@@ -215,8 +218,16 @@
     </div>
 
     <script>
-        function redirectToAuthorize() {
-            window.location.href = "/authorize";
+        function redirectTo(location) {
+            if (location == "/authorize") {
+                window.location.href = "/authorize";
+            } else if (location == "/clear") {
+                window.location.href = "/clear";
+            } else if (location == "/revoke") {
+                window.location.href = "/revoke";
+            } else if (location == "/stopWatch") {
+                window.location.href = "/stopWatch";
+            }
         }
         function toggleApp() {
             var status = document.querySelector('.status span');

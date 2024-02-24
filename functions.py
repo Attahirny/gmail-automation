@@ -1,7 +1,9 @@
+import secrets
 import re
 import json
 import base64
 import os
+import requests
 from bs4 import BeautifulSoup
 from typing import Dict, Optional
 from datetime import datetime, timedelta
@@ -14,7 +16,7 @@ from googleapiclient.errors import HttpError
 
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/gmail.modify", "https://www.googleapis.com/auth/spreadsheets"]
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify", "https://www.googleapis.com/auth/spreadsheets"] # openid , profile 
 LAST_HISTORY_ID = 0
 NEXT_WATCH = None
 creds = None
@@ -105,39 +107,80 @@ def create_credentials():
     return credentials
 
 def check_credentials(cred, token=None):
+    """
+    Checks the validity of the credentials and generates an authorization URL if the credentials are not valid or expired.
+
+    Args:
+        cred: The client configuration credentials.
+        token (optional): The authorized user info token.
+
+    Returns:
+        A tuple containing the authorization URL and state.
+    """
     global creds
 
-    if token:
-        token = json.loads(token)
-        creds = Credentials.from_authorized_user_info(token)  # Path to your credentials file    
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        elif cred:
-            # Create OAuth 2.0 flow
-            flow = Flow.from_client_config(cred, scopes=SCOPES)
-            redirect_uri = os.environ.get('REDIRECT_URL')
-            flow.redirect_uri = redirect_uri
-            # print(redirect_uri)
+    try:
+        if token:
+            creds = Credentials.from_authorized_user_info(token)  # Path to your credentials file    
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            elif cred:
+                # Create OAuth 2.0 flow
+                flow = Flow.from_client_config(cred, scopes=SCOPES)
+                redirect_uri = os.environ.get('REDIRECT_URL')
+                flow.redirect_uri = redirect_uri
+                # print(redirect_uri)
 
-            # Generate authorization URL
-            authorization_url, state = flow.authorization_url(
-                access_type='offline',
-                prompt='consent'
-            )
-            # print(state)
-            return authorization_url, state
+                # Generate authorization URL
+                authorization_url, state = flow.authorization_url(
+                    access_type='offline',
+                    include_granted_scopes='true',
+                    prompt='consent'
+                )
+                # print(state)
+                return authorization_url, state
+    except:
+        return None
 
-def finalize_auth(cred, code):
-    print("code: ", code)
+def get_token(cred: Dict[str, str], code: str) -> Dict[str, str]:
+    """
+    Retrieves an access token using the provided credentials and authorization code.
+
+    Args:
+        cred: A dictionary containing the client ID and client secret.
+        code: The authorization code obtained from the user.
+
+    Returns:
+        A dictionary containing the access token and other credentials.
+    """
     flow = Flow.from_client_config(cred, scopes=SCOPES)
     flow.redirect_uri = os.environ.get('REDIRECT_URL')
     flow.fetch_token(code=code)
 
-    # Store credentials in the session
     creds = flow.credentials.to_json()
-    return creds
+    return json.loads(creds)
+
+def revoke_token() -> requests.Response:
+    """
+    Revoke an OAuth2 token by sending a POST request to the Google OAuth2 revoke endpoint.
+
+    Returns:
+        requests.Response: The response object if the token was successfully revoked, None otherwise.
+    """
+    global creds
+
+    try:
+        response = requests.post(
+            'https://oauth2.googleapis.com/revoke',
+            params={'token': creds.token},
+            headers={'content-type': 'application/x-www-form-urlencoded'}
+        )
+    except requests.exceptions.RequestException:
+        return None
+
+    return response
 
 def naira_to_float(amount: str) -> float:
     """
@@ -642,7 +685,18 @@ def check_watch_renewal() -> None:
         NEXT_WATCH = response["expiration"]
         LAST_HISTORY_ID = response["historyId"]
 
-def config():
+def config() -> bytes:
+    """
+    Configures the necessary variables for the application.
+    
+    Checks if the `SPREADSHEET_ID` and `TOPIC_NAME` variables are already set,
+    and if not, retrieves them from the environment variables.
+    Calls the `check_watch_renewal` function to ensure that the watch for Gmail
+    notifications is renewed if necessary.
+    
+    Returns:
+        A random string of 24 bytes.
+    """
     global TOPIC_NAME, SPREADSHEET_ID, creds
 
     # check_watch_renewal()
@@ -651,7 +705,7 @@ def config():
         SPREADSHEET_ID = os.environ.get('GOOGLE_SPREADSHEET_ID')
         TOPIC_NAME = f"projects/{os.environ.get('GOOGLE_PROJECT_ID')}/topics/{os.environ.get('GOOGLE_TOPIC_NAME')}"
 
-    return os.urandom(24)
+    return secrets.token_bytes(24)
 
 def handle_notify(data):
     """
@@ -675,7 +729,7 @@ def handle_notify(data):
                 if result:
                     return f"Payment for {user['student id']} verified!"
     
-    # check_watch_renewal()
+    check_watch_renewal()
     print("No payment verified!")
     return False
 
